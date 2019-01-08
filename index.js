@@ -1,16 +1,20 @@
 var Discogs = require('disconnect').Client;
 
+// TRACKLIST
 
-function pretty(obj) {
-    // pretty print objects
-    console.log(JSON.stringify(obj, null, 2));
+getMultipleTracklists([147876,164603]);
+
+function getMultipleTracklists(id_array){
+  id_array.forEach(function(id, index){
+    getTracklist(id, function (release) {
+      console.log();
+      console.log();
+      console.log("getTrackList with id "+id);
+      console.log();
+      console.log(release);
+    });
+  });
 }
-
-
-getTracklist(147876, function (release) {
-  console.log("getTrackList");
-  console.log(release);
-});
 
 function getTracklist(releaseId, callback) {
   var release = {};
@@ -38,9 +42,11 @@ function getTracklist(releaseId, callback) {
 
       })
       callback(release);
-
-
   });
-
 }
 
+// HELPERS
+function pretty(obj) {
+    // pretty print objects
+    console.log(JSON.stringify(obj, null, 2));
+}
