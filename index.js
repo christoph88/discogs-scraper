@@ -17,6 +17,11 @@ function getMultipleLabels(id_array){
       console.log("getLabel with id "+id);
       console.log();
       console.log(label);
+      //label.releases.forEach(function(release, index) {
+        //console.log(release.title);
+        //console.log(release.tracklist);
+      
+      //});
     });
 
   });
@@ -47,34 +52,38 @@ function getLabelReleases(label, callback) {
 
       data.releases.forEach(function(release, index) {
         //console.log(pretty(release));
-        label['releases'][index]= {};
 
-        label['releases'][index]['order']=index+1;
-        label['releases'][index]['id']=release.id;
-        label['releases'][index]['catno']=release.catno;
-        label['releases'][index]['year']=release.year;
-        label['releases'][index]['title']=release.title;
-        label['releases'][index]['tracklist']=getTracklist(release.id);
+        getTracklist(release.id, function (tracklist) {
+          label['releases'][index]= {};
+
+          label['releases'][index]['order']=index+1;
+          label['releases'][index]['id']=release.id;
+          label['releases'][index]['catno']=release.catno;
+          label['releases'][index]['year']=release.year;
+          label['releases'][index]['title']=release.title;
+          label['releases'][index]['tracklist']=tracklist;
+
+          if(callback) callback(label);
+        });
+
          
       });
-      //console.log(pretty(label));
-      if(callback) callback(label);
   });
 }
 
 
 // TRACKLIST
 
-function getTracklist(releaseId) {
+function getTracklist(releaseId, callback) {
   var tracklist = [];
 
   var db = new Discogs().database();
   db.getRelease(releaseId, function(err, data){
 
       //console.log(JSON.stringify(data, null, 2));
-       console.log('get tracklist for '+releaseId)
+      //console.log('get tracklist for '+releaseId)
 
-      discogsTracklist = data.tracklist;
+      var discogsTracklist = data.tracklist || [];
 
       discogsTracklist.forEach(function(track, index) {
         //console.log(track.title);
@@ -92,7 +101,7 @@ function getTracklist(releaseId) {
       })
 
       //console.log(tracklist);
-      return tracklist;
+      if(callback) callback(tracklist);
   });
 
 }
