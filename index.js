@@ -58,7 +58,7 @@ function getLabelReleases(label, callback) {
          
       });
       //console.log(pretty(label));
-      callback ? callback(label) : null;
+      if(callback) callback(label);
   });
 }
 
