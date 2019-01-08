@@ -31,6 +31,7 @@ function getTracklist(releaseId, callback) {
 
       tracklist.forEach(function(track, index) {
         release['tracklist'][index] = {};
+        release['tracklist'][index].order = index+1;
         release['tracklist'][index].position = track.position;
         release['tracklist'][index].title = track.title;
 
