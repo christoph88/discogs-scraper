@@ -1,4 +1,5 @@
 var Discogs = require('disconnect').Client;
+var db = new Discogs().database();
 
 
 // LABEL
@@ -31,8 +32,6 @@ function getMultipleLabels(id_array){
 function getLabel(labelId, callback) {
   var label = {};
 
-  var db = new Discogs().database();
-
   db.getLabel(labelId, function(err, data){
       //console.log(JSON.stringify(data, null, 2));
       label['id'] = data.id;
@@ -46,7 +45,6 @@ function getLabel(labelId, callback) {
 function getLabelReleases(label, callback) {
   label['releases'] = [];
 
-  var db = new Discogs().database();
   db.getLabelReleases(label.id, function(err, data){
       //console.log(JSON.stringify(data, null, 2));
 
@@ -77,7 +75,6 @@ function getLabelReleases(label, callback) {
 function getTracklist(releaseId, callback) {
   var tracklist = [];
 
-  var db = new Discogs().database();
   db.getRelease(releaseId, function(err, data){
 
       //console.log(JSON.stringify(data, null, 2));
