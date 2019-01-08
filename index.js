@@ -1,49 +1,100 @@
 var Discogs = require('disconnect').Client;
 
-// TRACKLIST
 
-getMultipleTracklists([147876,164603]);
+// LABEL
 
-function getMultipleTracklists(id_array){
+//getMultipleLabels([365719,265687]);
+getMultipleLabels([265687]);
+
+
+function getMultipleLabels(id_array){
+
   id_array.forEach(function(id, index){
-    getTracklist(id, function (release) {
+
+    getLabel(id, function (label) {
       console.log();
       console.log();
-      console.log("getTrackList with id "+id);
+      console.log("getLabel with id "+id);
       console.log();
-      console.log(release);
+      console.log(label);
     });
+
+  });
+
+}
+
+function getLabel(labelId, callback) {
+  var label = {};
+
+  var db = new Discogs().database();
+
+  db.getLabel(labelId, function(err, data){
+      //console.log(JSON.stringify(data, null, 2));
+      label['id'] = data.id;
+      label['name'] = data.name;
+
+      //console.log(pretty(label));
+      getLabelReleases(label, callback);
   });
 }
 
-function getTracklist(releaseId, callback) {
-  var release = {};
+function getLabelReleases(label, callback) {
+  label['releases'] = [];
+
+  var db = new Discogs().database();
+  db.getLabelReleases(label.id, function(err, data){
+      //console.log(JSON.stringify(data, null, 2));
+
+      data.releases.forEach(function(release, index) {
+        //console.log(pretty(release));
+        label['releases'][index]= {};
+
+        label['releases'][index]['order']=index+1;
+        label['releases'][index]['id']=release.id;
+        label['releases'][index]['catno']=release.catno;
+        label['releases'][index]['year']=release.year;
+        label['releases'][index]['title']=release.title;
+        label['releases'][index]['tracklist']=getTracklist(release.id);
+         
+      });
+      //console.log(pretty(label));
+      callback ? callback(label) : null;
+  });
+}
+
+
+// TRACKLIST
+
+function getTracklist(releaseId) {
+  var tracklist = [];
 
   var db = new Discogs().database();
   db.getRelease(releaseId, function(err, data){
+
       //console.log(JSON.stringify(data, null, 2));
+       console.log('get tracklist for '+releaseId)
 
-      release['title'] = data.title;
-      release['uri'] = data.uri;
-      release['catno'] = data.labels[0].catno;
-      release['tracklist'] = [];
-      tracklist = data.tracklist;
+      discogsTracklist = data.tracklist;
 
-      tracklist.forEach(function(track, index) {
-        release['tracklist'][index] = {};
-        release['tracklist'][index].order = index+1;
-        release['tracklist'][index].position = track.position;
-        release['tracklist'][index].title = track.title;
+      discogsTracklist.forEach(function(track, index) {
+        //console.log(track.title);
+        tracklist[index] = {};
+        tracklist[index].order = index+1;
+        tracklist[index].position = track.position;
+        tracklist[index].title = track.title;
 
         var artists = [];
-        track.artists.forEach(function(artist, index) {
+        track.artists && track.artists.forEach(function(artist, index) {
           artists[index] = artist.name;
         })
-        release['tracklist'][index].artists = artists.join(" & ");
+        tracklist[index].artists = artists.join(" & ");
 
       })
-      callback(release);
+
+      //console.log(tracklist);
+      return tracklist;
   });
+
 }
 
 // HELPERS
