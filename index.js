@@ -1,17 +1,21 @@
 var Discogs = require('disconnect').Client;
 
-var db = new Discogs().database();
-
-var releases = [];
 
 function pretty(obj) {
     // pretty print objects
     console.log(JSON.stringify(obj, null, 2));
 }
 
-function getTracklist(releaseId) {
+
+getTracklist(147876, function (release) {
+  console.log("getTrackList");
+  console.log(release);
+});
+
+function getTracklist(releaseId, callback) {
   var release = {};
 
+  var db = new Discogs().database();
   db.getRelease(releaseId, function(err, data){
       //console.log(JSON.stringify(data, null, 2));
 
@@ -33,12 +37,10 @@ function getTracklist(releaseId) {
         release['tracklist'][index].artists = artists.join(" & ");
 
       })
+      callback(release);
 
 
   });
 
-  return release;
 }
 
-var test = getTracklist(186895);
-pretty(test);
