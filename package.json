@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "disconnect": "^1.2.1"
+    "disconnect": "^1.2.1",
+    "jsonexport": "^2.4.1"
   }
 }

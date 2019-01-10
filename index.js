@@ -1,31 +1,66 @@
 var Discogs = require('disconnect').Client;
+var jsonexport = require('jsonexport');
+const fs = require('fs');
+
+
+
 var db = new Discogs().database();
 
+var labels =[365719,265687];
+
+var exportArray = []
 
 // LABEL
 
-//getMultipleLabels([365719,265687]);
-getMultipleLabels([265687]);
+getMultipleLabels(labels,function(row, index){
+  //console.log("print row");
+  //console.log(row);
+  exportArray[index] = row;
+  console.log();
+  console.log("print array length");
+  console.log();
+  console.log(exportArray.length);
+
+  //// start export
+  //jsonexport(exportArray, function(err, csv) {
+      //if (err) return console.log(err);
+      ////console.log(csv);
+      //fs.writeFile('export.csv', csv, (err) => {
+          //// throws an error, you could also catch it here
+          //if (err) throw err;
+
+          //// success case, the file was saved
+          //console.log('Export saved!');
+      //});
+  //});
+  //// end export
+});
 
 
-function getMultipleLabels(id_array){
+function getMultipleLabels(id_array, callback){
 
   id_array.forEach(function(id, index){
-
     getLabel(id, function (label) {
-      console.log();
-      console.log();
-      console.log("getLabel with id "+id);
-      console.log();
-      console.log(label);
-      //label.releases.forEach(function(release, index) {
-        //console.log(release.title);
-        //console.log(release.tracklist);
-      
-      //});
+      label.releases.forEach(function(release,index) {
+        release.tracklist.forEach(function(track, index) {
+        row = {};
+        row['labelid'] = label.id;
+        row['label.name'] = label.name;
+        row['order'] = release.order;
+        row['release.id'] = release.id;
+        row['release.catno'] = release.catno;
+        row['release.year'] = release.year;
+        row['release.title'] = release.title;
+        row['track.order'] = track.order;
+        row['track.position'] = track.position;
+        row['track.title'] = track.title;
+        row['track.artists'] = track.artists;
+        if(callback) callback(row, index)
+        });
+      });
     });
-
   });
+
 
 }
 
