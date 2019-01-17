@@ -12,11 +12,7 @@ const labelsToGet = [];
 process.argv.forEach((val, index, array) => {
   console.log(`${index}: ${val}`);
   if (index > 1) {
-    if (Array.isArray(val)) {
-      labelsToGet.concat(val);
-    } else {
-      labelsToGet.push(val);
-    }
+    labelsToGet.push(val);
   }
 });
 
