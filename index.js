@@ -71,13 +71,13 @@ const getRelease = function (label) {
         promiseTracklist.forEach((release) => {
           release.tracklist.forEach((track) => {
             // join artists
-            if (track.artists.isArray) {
+            if (track.artists instanceof Array) {
               track.artists = track.artists
                 .map(artist => artist.name + artist.join)
                 .join();
             }
             // join extra artists
-            if (track.extraartists.isArray) {
+            if (track.extraartists instanceof Array) {
               track.extraartists = track.extraartists
                 .map(extraartist => extraartist.name + extraartist.join)
                 .join();
