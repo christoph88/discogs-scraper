@@ -4,13 +4,11 @@ const fs = require('fs');
 
 const db = new Discogs().database();
 
-// const labelsToGet = [365719, 265687];
-// const labelsToGet = [365719];
-const labelsToGet = [];
+// const labelsToGet = [];
+const labelsToGet = [365719];
 
 // process command line arguments
 process.argv.forEach((val, index, array) => {
-  console.log(`${index}: ${val}`);
   if (index > 1) {
     labelsToGet.push(val);
   }
@@ -72,6 +70,19 @@ const getRelease = function (label) {
         // modify tracklist to add label and release info
         promiseTracklist.forEach((release) => {
           release.tracklist.forEach((track) => {
+            // join artists
+            if (track.artists.isArray) {
+              track.artists = track.artists
+                .map(artist => artist.name + artist.join)
+                .join();
+            }
+            // join extra artists
+            if (track.extraartists.isArray) {
+              track.extraartists = track.extraartists
+                .map(extraartist => extraartist.name + extraartist.join)
+                .join();
+            }
+            // get fields from label and release
             track.labelname = label.name;
             track.releasetitle = release.title;
             track.releaseid = release.id;
