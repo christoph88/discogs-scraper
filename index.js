@@ -81,11 +81,24 @@ const getRelease = function (label) {
   });
 };
 
+// needed flat format for json export
+const mergeTracklists = function (labels) {
+  const mergedTracklist = [];
+  labels.forEach((label) => {
+    label.releases.forEach((release) => {
+      release.tracklist.forEach((track) => {
+        mergedTracklist.push(track);
+      });
+    });
+  });
+  return mergedTracklist;
+};
+
 Promise.all(labelsToGet.map(getLabel))
   .then(labels => Promise.all(labels.map(getLabelRelease)))
   .then(labels => Promise.all(labels.map(getRelease)))
   .then((labels) => {
-    jsonexport(labels, (err, csv) => {
+    jsonexport(mergeTracklists(labels), (err, csv) => {
       if (err) return console.log(err);
       fs.writeFile('export.csv', csv, (err) => {
         if (err) {
