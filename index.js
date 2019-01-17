@@ -1,11 +1,21 @@
 const Discogs = require('disconnect').Client;
 const jsonexport = require('jsonexport');
 const fs = require('fs');
-
 const db = new Discogs().database();
 
-const labelsToGet = [365719, 265687];
+
+//const labelsToGet = [365719, 265687];
 // const labelsToGet = [365719];
+const labelsToGet = [];
+
+// process command line arguments
+ process.argv.forEach(function (val, index, array) {
+   console.log(index + ': ' + val);
+   if(Array.isArray(val)) {labelsToGet.concat(val)}
+   else {labelsToGet.push(val)}
+   })
+ }))
+
 
 const getLabel = function (labelId) {
   return new Promise((resolve, reject) => {
