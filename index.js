@@ -1,5 +1,4 @@
 const Discogs = require('disconnect').Client;
-const flatten = require('flat');
 const jsonexport = require('jsonexport');
 const fs = require('fs');
 
@@ -61,6 +60,19 @@ const getRelease = function (label) {
   return new Promise((resolve, reject) => {
     const promiseTracklist = Promise.all(label.releases.map(getTracklist))
       .then((promiseTracklist) => {
+        // modify tracklist to add label and release info
+        promiseTracklist.forEach((release) => {
+          release.tracklist.forEach((track) => {
+            track.labelname = label.name;
+            track.releasetitle = release.title;
+            track.releaseid = release.id;
+            track.releasecatno = release.catno;
+            track.releaseformat = release.format;
+            track.releaseyear = release.year;
+            track.releasetitle = release.title;
+            track.releaseartist = release.artist;
+          });
+        });
         label.releases = promiseTracklist;
         return label;
       })
@@ -72,9 +84,8 @@ const getRelease = function (label) {
 Promise.all(labelsToGet.map(getLabel))
   .then(labels => Promise.all(labels.map(getLabelRelease)))
   .then(labels => Promise.all(labels.map(getRelease)))
-  .then(labels => flatten(labels))
-  .then((flat) => {
-    jsonexport(flat, (err, csv) => {
+  .then((labels) => {
+    jsonexport(labels, (err, csv) => {
       if (err) return console.log(err);
       fs.writeFile('export.csv', csv, (err) => {
         if (err) {
