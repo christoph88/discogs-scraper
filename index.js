@@ -4,130 +4,105 @@ const fs = require('fs');
 
 const db = new Discogs().database();
 
-// const labelsToGet = [];
-const labelsToGet = [365719];
+// get labels by inputting ids
+const urls = `https://www.discogs.com/label/265687-Lords-Of-Hardcore
+  https://www.discogs.com/label/365719-Hardcore-To-The-Bone`;
 
-// process command line arguments
-process.argv.forEach((val, index, array) => {
-  if (index > 1) {
-    labelsToGet.push(val);
-  }
-});
+const urlIdsArr = urls.split('\n').map(url => url.match(/\d+/g)[0]);
+// const labelsToGet = [16705, 265687]; // .concat(urlIdsArr);
+const labelsToGet = [265687]; // .concat(urlIdsArr);
+// const labelsToGet = [16705]; // .concat(urlIdsArr);
 
 const getLabel = function (labelId) {
   return new Promise((resolve, reject) => {
     db.getLabel(labelId, (err, data) => {
-      const label = {};
       if (err) {
         reject(err);
-      } else {
-        label.id = data.id;
-        label.name = data.name;
-        resolve(label);
       }
+      const label = data;
+      resolve(label);
     });
   });
 };
 
 const getLabelRelease = function (label) {
   return new Promise((resolve, reject) => {
-    label.releases = [];
     db.getLabelReleases(label.id, (err, data) => {
-      const release = {};
       if (err) {
         reject(err);
-      } else {
-        data.releases.forEach((data2) => {
-          release.id = data2.id;
-          release.catno = data2.catno;
-          release.format = data2.format;
-          release.year = data2.year;
-          release.title = data2.title;
-          release.artist = data2.artist;
-          label.releases.push(release);
-        });
       }
+      label.releases = data.releases;
+
       resolve(label);
     });
   });
 };
 
-const getTracklist = function (release) {
+const promiseRelease = function (release) {
   return new Promise((resolve, reject) => {
     db.getRelease(release.id, (err, data) => {
       if (err) {
         reject(err);
       }
-      release.tracklist = data.tracklist;
+      release.detail = data;
       resolve(release);
     });
   });
 };
+
 const getRelease = function (label) {
   return new Promise((resolve, reject) => {
-    const promiseTracklist = Promise.all(label.releases.map(getTracklist))
-      .then((promiseTracklist) => {
-        // modify tracklist to add label and release info
-        promiseTracklist.forEach((release) => {
-          release.tracklist.forEach((track) => {
-            // join artists
-            if (track.artists instanceof Array) {
-              track.artists = track.artists
-                .map(artist => artist.name + artist.join)
-                .join();
-            }
-            // join extra artists
-            if (track.extraartists instanceof Array) {
-              track.extraartists = track.extraartists
-                .map(extraartist => extraartist.name + extraartist.join)
-                .join();
-            }
-            // get fields from label and release
-            track.labelname = label.name;
-            track.releasetitle = release.title;
-            track.releaseid = release.id;
-            track.releasecatno = release.catno;
-            track.releaseformat = release.format;
-            track.releaseyear = release.year;
-            track.releasetitle = release.title;
-            track.releaseartist = release.artist;
-          });
-        });
-        label.releases = promiseTracklist;
-        return label;
-      })
-      .then(label => resolve(label))
-      .catch(err => reject(err));
+    Promise.all(label.releases.map(promiseRelease)).then((releases) => {
+      label.releases = releases;
+      resolve(label);
+    });
   });
 };
 
 // needed flat format for json export
-const mergeTracklists = function (labels) {
-  const mergedTracklist = [];
-  labels.forEach((label) => {
+const mergeTracklists = function (label) {
+  return new Promise((resolve, reject) => {
+    if (err) {
+      reject(err);
+    }
+    const mergedTracklist = [];
     label.releases.forEach((release) => {
-      release.tracklist.forEach((track) => {
-        mergedTracklist.push(track);
+      release.details.forEach((rel) => {
+        rel.tracklist.forEach(track => mergedTracklist.push(track));
       });
     });
+    resolve(mergedTracklist);
   });
-  return mergedTracklist;
 };
 
+// TODO some releases do not have a tracklist
+// use conditional promises to exlude these release
+// TODO add order number to release
+// TODO add playlist limit to releases, by amount of releases?
 Promise.all(labelsToGet.map(getLabel))
   .then(labels => Promise.all(labels.map(getLabelRelease)))
   .then(labels => Promise.all(labels.map(getRelease)))
   .then((labels) => {
-    jsonexport(mergeTracklists(labels), (err, csv) => {
-      if (err) return console.log(err);
-      fs.writeFile('export.csv', csv, (err) => {
-        if (err) {
-          return console.log(err);
-        }
-        console.log('The file was saved!');
-      });
-    });
+    labels.map(label => mergeTracklists(label));
   })
+  .then((tracklists) => {
+    const mergedLists = [];
+    tracklists.forEach(tracklist => mergedLists.concat(tracklist));
+    return mergedLists;
+  })
+  // .then((labels) => {
+  // jsonexport(mergeTracklists(labels), (err, csv) => {
+  // if (err) return console.log(err);
+  // fs.writeFile('export.csv', csv, (err) => {
+  // if (err) {
+  // return console.log(err);
+  // }
+  // console.log('The file was saved!');
+  // });
+  // });
+  // })
+  // .then(labels => console.log(labels[0].releases[0].detail))
+  .then(check => console.log(check))
   .catch((err) => {
     console.log('Failed:', err);
   });
