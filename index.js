@@ -1,8 +1,15 @@
+// use conditional promises to exlude these release
+// authenticate in disconnect
+// create a general counter to throthle requests to 60 per minute
+// create a throttle function?
+const config = require('./config');
 const Discogs = require('disconnect').Client;
 const jsonexport = require('jsonexport');
 const fs = require('fs');
 
 const db = new Discogs().database();
+
+console.log(config.test);
 
 // get labels by inputting ids
 const urls = `https://www.discogs.com/label/265687-Lords-Of-Hardcore
@@ -10,8 +17,8 @@ const urls = `https://www.discogs.com/label/265687-Lords-Of-Hardcore
 
 const urlIdsArr = urls.split('\n').map(url => url.match(/\d+/g)[0]);
 // const labelsToGet = [16705, 265687]; // .concat(urlIdsArr);
-const labelsToGet = [265687]; // .concat(urlIdsArr);
-// const labelsToGet = [16705]; // .concat(urlIdsArr);
+// const labelsToGet = [265687]; // .concat(urlIdsArr);
+const labelsToGet = [16705]; // .concat(urlIdsArr);
 
 const getLabel = function (labelId) {
   return new Promise((resolve, reject) => {
@@ -27,7 +34,7 @@ const getLabel = function (labelId) {
 
 const getLabelRelease = function (label) {
   return new Promise((resolve, reject) => {
-    db.getLabelReleases(label.id, (err, data) => {
+    db.getLabelReleases(label.id, (err, data, limit) => {
       if (err) {
         reject(err);
       }
@@ -40,7 +47,7 @@ const getLabelRelease = function (label) {
 
 const promiseRelease = function (release) {
   return new Promise((resolve, reject) => {
-    db.getRelease(release.id, (err, data) => {
+    db.getRelease(release.id, (err, data, limit) => {
       if (err) {
         reject(err);
       }
@@ -92,10 +99,6 @@ const pushTracklists = function (labels) {
   });
 };
 
-// TODO some releases do not have a tracklist
-// use conditional promises to exlude these release
-// TODO add order number to release
-// TODO add playlist limit to releases, by amount of releases?
 Promise.all(labelsToGet.map(getLabel))
   .then(labels => Promise.all(labels.map(getLabelRelease)))
   .then(labels => Promise.all(labels.map(getRelease)))
