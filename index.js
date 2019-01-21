@@ -2,14 +2,12 @@
 // authenticate in disconnect
 // create a general counter to throthle requests to 60 per minute
 // create a throttle function?
-const config = require('./config');
 const Discogs = require('disconnect').Client;
 const jsonexport = require('jsonexport');
 const fs = require('fs');
+const config = require('./config');
 
-const db = new Discogs().database();
-
-console.log(config.test);
+const db = new Discogs({ userToken: config.discogs.usertoken }).database();
 
 // get labels by inputting ids
 const urls = `https://www.discogs.com/label/265687-Lords-Of-Hardcore
@@ -17,8 +15,8 @@ const urls = `https://www.discogs.com/label/265687-Lords-Of-Hardcore
 
 const urlIdsArr = urls.split('\n').map(url => url.match(/\d+/g)[0]);
 // const labelsToGet = [16705, 265687]; // .concat(urlIdsArr);
-// const labelsToGet = [265687]; // .concat(urlIdsArr);
-const labelsToGet = [16705]; // .concat(urlIdsArr);
+const labelsToGet = [265687]; // .concat(urlIdsArr);
+// const labelsToGet = [16705]; // .concat(urlIdsArr);
 
 const getLabel = function (labelId) {
   return new Promise((resolve, reject) => {
@@ -57,12 +55,19 @@ const promiseRelease = function (release) {
   });
 };
 
+const properFormat = function (release) {
+  return release.format.match(config.formatRegEx);
+};
+
 const getRelease = function (label) {
   return new Promise((resolve, reject) => {
-    Promise.all(label.releases.map(promiseRelease)).then((releases) => {
-      label.releases = releases;
-      resolve(label);
-    });
+    console.log(label.releases);
+    Promise.all(label.releases.filter(properFormat).map(promiseRelease)).then(
+      (releases) => {
+        label.releases = releases;
+        resolve(label);
+      },
+    );
   });
 };
 
@@ -103,17 +108,19 @@ Promise.all(labelsToGet.map(getLabel))
   .then(labels => Promise.all(labels.map(getLabelRelease)))
   .then(labels => Promise.all(labels.map(getRelease)))
   .then((labels) => {
-    pushTracklists(labels).then((tracks) => {
-      jsonexport(tracks, (err, csv) => {
-        if (err) return console.log(err);
-        fs.writeFile('export.csv', csv, (err) => {
-          if (err) {
-            return console.log(err);
-          }
-          console.log('The file was saved!');
+    pushTracklists(labels)
+      .then((tracks) => {
+        jsonexport(tracks, (err, csv) => {
+          if (err) return console.log(err);
+          fs.writeFile('export.csv', csv, (err) => {
+            if (err) {
+              return console.log(err);
+            }
+            console.log('The file was saved!');
+          });
         });
-      });
-    });
+      })
+      .catch(err => console.log('Failed: ', err));
   })
   .catch((err) => {
     console.log('Failed:', err);
