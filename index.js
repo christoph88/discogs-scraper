@@ -59,19 +59,36 @@ const getRelease = function (label) {
   });
 };
 
-// needed flat format for json export
-const mergeTracklists = function (label) {
-  return new Promise((resolve, reject) => {
-    if (err) {
-      reject(err);
-    }
-    const mergedTracklist = [];
-    label.releases.forEach((release) => {
-      release.details.forEach((rel) => {
-        rel.tracklist.forEach(track => mergedTracklist.push(track));
+const pushTracklists = function (labels) {
+  return new Promise((resolve) => {
+    const tracks = [];
+    labels.forEach((label) => {
+      label.releases.forEach((release) => {
+        release.detail.tracklist.forEach((track, index) => {
+          const exportTrack = {};
+          exportTrack.labelName = label.name;
+          exportTrack.labelId = label.id;
+          exportTrack.releaseCatno = release.catno;
+          exportTrack.releaseFormat = release.format;
+          exportTrack.releaseYear = release.year;
+          exportTrack.releaseDate = release.detail.released;
+          exportTrack.releaseTitle = release.title;
+          exportTrack.releaseArtist = release.artist;
+          exportTrack.releaseId = release.id;
+          exportTrack.order = index;
+          exportTrack.position = track.position;
+          exportTrack.duration = track.duration;
+          exportTrack.title = track.title;
+          if (track.artists instanceof Array) {
+            exportTrack.artists = track.artists
+              .map(artist => `${artist.name} ${artist.join}`)
+              .join(' ');
+          }
+          tracks.push(exportTrack);
+        });
       });
     });
-    resolve(mergedTracklist);
+    resolve(tracks);
   });
 };
 
@@ -83,26 +100,18 @@ Promise.all(labelsToGet.map(getLabel))
   .then(labels => Promise.all(labels.map(getLabelRelease)))
   .then(labels => Promise.all(labels.map(getRelease)))
   .then((labels) => {
-    labels.map(label => mergeTracklists(label));
+    pushTracklists(labels).then((tracks) => {
+      jsonexport(tracks, (err, csv) => {
+        if (err) return console.log(err);
+        fs.writeFile('export.csv', csv, (err) => {
+          if (err) {
+            return console.log(err);
+          }
+          console.log('The file was saved!');
+        });
+      });
+    });
   })
-  .then((tracklists) => {
-    const mergedLists = [];
-    tracklists.forEach(tracklist => mergedLists.concat(tracklist));
-    return mergedLists;
-  })
-  // .then((labels) => {
-  // jsonexport(mergeTracklists(labels), (err, csv) => {
-  // if (err) return console.log(err);
-  // fs.writeFile('export.csv', csv, (err) => {
-  // if (err) {
-  // return console.log(err);
-  // }
-  // console.log('The file was saved!');
-  // });
-  // });
-  // })
-  // .then(labels => console.log(labels[0].releases[0].detail))
-  .then(check => console.log(check))
   .catch((err) => {
     console.log('Failed:', err);
   });
