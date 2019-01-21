@@ -12,44 +12,65 @@ const urls = `https://www.discogs.com/label/265687-Lords-Of-Hardcore
   https://www.discogs.com/label/365719-Hardcore-To-The-Bone`;
 
 const urlIdsArr = urls.split('\n').map(url => url.match(/\d+/g)[0]);
-// const labelsToGet = [16705, 265687]; // .concat(urlIdsArr);
-//const labelsToGet = [265687]; // .concat(urlIdsArr);
- const labelsToGet = [16705]; // .concat(urlIdsArr);
+const labelsToGet = [16705, 265687]; // .concat(urlIdsArr);
+// const labelsToGet = [265687]; // .concat(urlIdsArr);
+// const labelsToGet = [16705]; // .concat(urlIdsArr);
+
+let dbThrottle = 0;
+const throttle = function () {
+  // 60 request per minute limit
+  // calculated with moving averages
+  if (dbThrottle < 60) {
+    return 0;
+  }
+  dbThrottle = 0;
+  return 5000;
+};
 
 const getLabel = function (labelId) {
   return new Promise((resolve, reject) => {
-    db.getLabel(labelId, (err, data) => {
-      if (err) {
-        reject(err);
-      }
-      const label = data;
-      resolve(label);
-    });
+    setTimeout(() => {
+      db.getLabel(labelId, (err, data) => {
+        dbThrottle++;
+        if (err) {
+          reject(err);
+        }
+        const label = data;
+        resolve(label);
+      });
+    }, throttle());
   });
 };
 
 const getLabelRelease = function (label) {
   return new Promise((resolve, reject) => {
-    db.getLabelReleases(label.id, (err, data, limit) => {
-      if (err) {
-        reject(err);
-      }
-      label.releases = data.releases;
+    setTimeout(() => {
+      db.getLabelReleases(label.id, (err, data) => {
+        dbThrottle++;
+        if (err) {
+          reject(err);
+        }
+        label.releases = data.releases;
 
-      resolve(label);
-    });
+        resolve(label);
+      });
+    }, throttle());
   });
 };
 
 const promiseRelease = function (release) {
   return new Promise((resolve, reject) => {
-    db.getRelease(release.id, (err, data, limit) => {
-      if (err) {
-        reject(err);
-      }
-      release.detail = data;
-      resolve(release);
-    });
+    setTimeout(() => {
+      db.getRelease(release.id, (err, data) => {
+        dbThrottle++;
+        console.log(dbThrottle);
+        if (err) {
+          reject(err);
+        }
+        release.detail = data;
+        resolve(release);
+      });
+    }, throttle());
   });
 };
 
@@ -59,13 +80,14 @@ const properFormat = function (release) {
 
 const getRelease = function (label) {
   return new Promise((resolve, reject) => {
-    console.log(label.releases);
-    Promise.all(label.releases.filter(properFormat).map(promiseRelease)).then(
-      (releases) => {
+    Promise.all(label.releases.filter(properFormat).map(promiseRelease))
+      .then((releases) => {
         label.releases = releases;
         resolve(label);
-      },
-    );
+      })
+      .catch((err) => {
+        reject(err);
+      });
   });
 };
 
