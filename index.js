@@ -1,5 +1,3 @@
-// use conditional promises to exlude these release
-// authenticate in disconnect
 // create a general counter to throthle requests to 60 per minute
 // create a throttle function?
 const Discogs = require('disconnect').Client;
@@ -15,8 +13,8 @@ const urls = `https://www.discogs.com/label/265687-Lords-Of-Hardcore
 
 const urlIdsArr = urls.split('\n').map(url => url.match(/\d+/g)[0]);
 // const labelsToGet = [16705, 265687]; // .concat(urlIdsArr);
-const labelsToGet = [265687]; // .concat(urlIdsArr);
-// const labelsToGet = [16705]; // .concat(urlIdsArr);
+//const labelsToGet = [265687]; // .concat(urlIdsArr);
+ const labelsToGet = [16705]; // .concat(urlIdsArr);
 
 const getLabel = function (labelId) {
   return new Promise((resolve, reject) => {
