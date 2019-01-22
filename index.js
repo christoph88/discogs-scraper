@@ -1,5 +1,3 @@
-// create a general counter to throthle requests to 60 per minute
-// create a throttle function?
 const Discogs = require('disconnect').Client;
 const jsonexport = require('jsonexport');
 const fs = require('fs');
@@ -16,14 +14,14 @@ const labelsToGet = [16705, 265687]; // .concat(urlIdsArr);
 // const labelsToGet = [265687]; // .concat(urlIdsArr);
 // const labelsToGet = [16705]; // .concat(urlIdsArr);
 
-let dbThrottle = 0;
+let dbRequests = 0;
 const throttle = function () {
   // 60 request per minute limit
-  // calculated with moving averages
-  if (dbThrottle < 60) {
+  dbRequests++;
+  if (dbRequests < 60) {
     return 0;
   }
-  dbThrottle = 0;
+  dbRequests = 0;
   return 5000;
 };
 
@@ -31,7 +29,6 @@ const getLabel = function (labelId) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       db.getLabel(labelId, (err, data) => {
-        dbThrottle++;
         if (err) {
           reject(err);
         }
@@ -46,7 +43,6 @@ const getLabelRelease = function (label) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       db.getLabelReleases(label.id, (err, data) => {
-        dbThrottle++;
         if (err) {
           reject(err);
         }
@@ -61,9 +57,8 @@ const getLabelRelease = function (label) {
 const promiseRelease = function (release) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
+      console.log(`Get release: ${release.title}`);
       db.getRelease(release.id, (err, data) => {
-        dbThrottle++;
-        console.log(dbThrottle);
         if (err) {
           reject(err);
         }
