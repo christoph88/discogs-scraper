@@ -13,6 +13,7 @@ const throttle = function () {
     return 0;
   }
   dbRequests = 0;
+  console.log('Start throttling...');
   return 5000;
 };
 
@@ -110,19 +111,20 @@ const pushTracklists = function (labels) {
   });
 };
 
-module.exports = function(labelsToGet) {
+module.exports = function (labelsToGet) {
   Promise.all(labelsToGet.map(getLabel))
     .then(labels => Promise.all(labels.map(getLabelRelease)))
     .then(labels => Promise.all(labels.map(getRelease)))
     .then((labels) => {
       pushTracklists(labels)
         .then((tracks) => {
+          console.log('Start writing export.csv file');
           jsonexport(tracks, (err, csv) => {
             if (err) return console.log(err);
             fs.writeFile('export.csv', csv, (err) => {
-            if (err) {
-              return console.log(err);
-            }
+              if (err) {
+                return console.log(err);
+              }
               console.log('The file was saved!');
             });
           });
