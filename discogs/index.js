@@ -5,59 +5,41 @@ const config = require('../config');
 
 const db = new Discogs({ userToken: config.discogs.usertoken }).database();
 
-let dbRequests = 0;
-const throttle = function () {
-  // 60 request per minute limit
-  dbRequests++;
-  if (dbRequests < 60) {
-    return 0;
-  }
-  dbRequests = 0;
-  console.log('Start throttling...');
-  return 5000;
-};
-
 const getLabel = function (labelId) {
   return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      db.getLabel(labelId, (err, data) => {
-        if (err) {
-          reject(err);
-        }
-        const label = data;
-        resolve(label);
-      });
-    }, throttle());
+    db.getLabel(labelId, (err, data) => {
+      if (err) {
+        reject(err);
+      }
+      const label = data;
+      resolve(label);
+    });
   });
 };
 
 const getLabelRelease = function (label) {
   return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      db.getLabelReleases(label.id, (err, data) => {
-        if (err) {
-          reject(err);
-        }
-        label.releases = data.releases;
+    db.getLabelReleases(label.id, (err, data) => {
+      if (err) {
+        reject(err);
+      }
+      label.releases = data.releases;
 
-        resolve(label);
-      });
-    }, throttle());
+      resolve(label);
+    });
   });
 };
 
 const promiseRelease = function (release) {
   return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      console.log(`Get release: ${release.title}`);
-      db.getRelease(release.id, (err, data) => {
-        if (err) {
-          reject(err);
-        }
-        release.detail = data;
-        resolve(release);
-      });
-    }, throttle());
+    db.getRelease(release.id, (err, data, rateLimit) => {
+      if (err) {
+        reject(err);
+      }
+      release.detail = data;
+      console.log(rateLimit.remaining + 'remaining')
+      setTimeout(() => { resolve(release); }, 2000);
+    });
   });
 };
 
@@ -67,18 +49,20 @@ const properFormat = function (release) {
 
 const getRelease = function (label) {
   return new Promise((resolve, reject) => {
+    console.log(`Getting label ${label.name} with ${label.releases.length} releases.`);
     Promise.all(label.releases.filter(properFormat).map(promiseRelease))
       .then((releases) => {
         label.releases = releases;
         resolve(label);
       })
       .catch((err) => {
-        reject(err);
+        reject(`Get release error: ${err}`);
       });
   });
 };
 
 const pushTracklists = function (labels) {
+  console.log('Push tracklist');
   return new Promise((resolve) => {
     const tracks = [];
     labels.forEach((label) => {
@@ -118,7 +102,7 @@ module.exports = function (labelsToGet) {
     .then((labels) => {
       pushTracklists(labels)
         .then((tracks) => {
-          console.log('Start writing export.csv file');
+          console.log('Start writing export.csv file.');
           jsonexport(tracks, (err, csv) => {
             if (err) return console.log(err);
             fs.writeFile('export.csv', csv, (err) => {
@@ -129,9 +113,9 @@ module.exports = function (labelsToGet) {
             });
           });
         })
-        .catch(err => console.log('Failed: ', err));
+        .catch(err => console.log(`Push tracklist  error: ${err}`));
     })
     .catch((err) => {
-      console.log('Failed:', err);
+      console.log('Get Label Error:', err);
     });
 };
