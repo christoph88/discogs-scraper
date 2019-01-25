@@ -5,41 +5,55 @@ const config = require('../config');
 
 const db = new Discogs({ userToken: config.discogs.usertoken }).database();
 
+// count the number of requests
+// limit them to one per second
+let throttle = 0;
+
 const getLabel = function (labelId) {
   return new Promise((resolve, reject) => {
-    db.getLabel(labelId, (err, data) => {
-      if (err) {
-        reject(err);
-      }
-      const label = data;
-      resolve(label);
-    });
+    throttle++;
+    setTimeout(() => {
+      db.getLabel(labelId, (err, data) => {
+        if (err) {
+          reject(err);
+        }
+        const label = data;
+        resolve(label);
+      });
+    }, throttle * 1000);
   });
 };
 
 const getLabelRelease = function (label) {
   return new Promise((resolve, reject) => {
-    db.getLabelReleases(label.id, (err, data) => {
-      if (err) {
-        reject(err);
-      }
-      label.releases = data.releases;
+    throttle++;
+    setTimeout(() => {
+      db.getLabelReleases(label.id, (err, data) => {
+        if (err) {
+          reject(err);
+        }
+        label.releases = data.releases;
 
-      resolve(label);
-    });
+        resolve(label);
+      });
+    }, throttle * 1000);
   });
 };
 
 const promiseRelease = function (release) {
   return new Promise((resolve, reject) => {
-    db.getRelease(release.id, (err, data, rateLimit) => {
-      if (err) {
-        reject(err);
-      }
-      release.detail = data;
-      console.log(rateLimit.remaining + 'remaining')
-      setTimeout(() => { resolve(release); }, 2000);
-    });
+    throttle++;
+    // releases of multiple labels have the same index, labels should add theirselves
+    setTimeout(() => {
+      db.getRelease(release.id, (err, data) => {
+        if (err) {
+          reject(err);
+        }
+        release.detail = data;
+        console.log(release.title);
+        resolve(release);
+      });
+    }, throttle * 1000);
   });
 };
 
@@ -49,7 +63,7 @@ const properFormat = function (release) {
 
 const getRelease = function (label) {
   return new Promise((resolve, reject) => {
-    console.log(`Getting label ${label.name} with ${label.releases.length} releases.`);
+    console.log(`Getting label ${label.name} with ${label.releases.filter(properFormat).length} releases.`);
     Promise.all(label.releases.filter(properFormat).map(promiseRelease))
       .then((releases) => {
         label.releases = releases;
@@ -69,6 +83,7 @@ const pushTracklists = function (labels) {
       label.releases.forEach((release) => {
         release.detail.tracklist.forEach((track, index) => {
           const exportTrack = {};
+          console.log(release.title);
           exportTrack.labelName = label.name;
           exportTrack.labelId = label.id;
           exportTrack.releaseCatno = release.catno;
@@ -113,7 +128,7 @@ module.exports = function (labelsToGet) {
             });
           });
         })
-        .catch(err => console.log(`Push tracklist  error: ${err}`));
+        .catch(err => console.log(`Push tracklist error: ${err}`));
     })
     .catch((err) => {
       console.log('Get Label Error:', err);

@@ -11,7 +11,8 @@
   "dependencies": {
     "disconnect": "^1.2.1",
     "flat": "^4.1.0",
-    "jsonexport": "^2.4.1"
+    "jsonexport": "^2.4.1",
+    "simple-rate-limiter": "^0.2.3"
   },
   "devDependencies": {
     "eslint": "^5.12.0",
