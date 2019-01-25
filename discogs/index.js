@@ -83,7 +83,6 @@ const pushTracklists = function (labels) {
       label.releases.forEach((release) => {
         release.detail.tracklist.forEach((track, index) => {
           const exportTrack = {};
-          console.log(release.title);
           exportTrack.labelName = label.name;
           exportTrack.labelId = label.id;
           exportTrack.releaseCatno = release.catno;
