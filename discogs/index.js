@@ -14,6 +14,7 @@ const getLabel = function (labelId) {
     throttle++;
     setTimeout(() => {
       db.getLabel(labelId, (err, data) => {
+        console.log('Get label: ' + data.name);
         if (err) {
           reject(err);
         }
@@ -28,6 +29,7 @@ const getLabelRelease = function (label) {
   return new Promise((resolve, reject) => {
     throttle++;
     setTimeout(() => {
+      console.log('Get label releases for ' + label.name);
       db.getLabelReleases(label.id, (err, data) => {
         if (err) {
           reject(err);
@@ -63,7 +65,11 @@ const properFormat = function (release) {
 
 const getRelease = function (label) {
   return new Promise((resolve, reject) => {
-    console.log(`Getting label ${label.name} with ${label.releases.filter(properFormat).length} releases.`);
+    console.log(
+      `Getting ${
+        label.releases.filter(properFormat).length
+      } releases for label ${label.name}.`,
+    );
     Promise.all(label.releases.filter(properFormat).map(promiseRelease))
       .then((releases) => {
         label.releases = releases;

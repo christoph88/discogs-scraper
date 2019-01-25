@@ -20,6 +20,5 @@ function readContent(callback) {
 // read and progres content
 readContent((err, content) => {
   const labelsToGet = content.split('\n').filter(removeEmpty).map(parseIds);
-  console.log(labelsToGet);
-  // discogs(labelsToGet.filter(removeEmpty));
+  discogs(labelsToGet.filter(removeEmpty));
 });
