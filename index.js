@@ -1,13 +1,25 @@
+const fs = require('fs');
 const discogs = require('./discogs/index');
+const filepath = process.argv[2];
 
-// get labels by inputting ids
-const urls = `https://www.discogs.com/label/265687-Lords-Of-Hardcore
-  https://www.discogs.com/label/365719-Hardcore-To-The-Bone`;
+const parseIds = function (text) {
+  return text.match(/\d+/g)[0];
+};
 
-const urlIdsArr = urls.split('\n').map(url => url.match(/\d+/g)[0]);
-const labelsToGet = [16705, 265687, 345291];
- //const labelsToGet = [265687];
-// const labelsToGet = [16705];
+const removeEmpty = function (item) {
+  return item !== null && item !== '';
+};
 
-// always push labelids to promise
-discogs(labelsToGet);
+function readContent(callback) {
+  fs.readFile(filepath, 'utf8', (err, content) => {
+    if (err) return callback(err);
+    callback(null, content);
+  });
+}
+
+// read and progres content
+readContent((err, content) => {
+  const labelsToGet = content.split('\n').filter(removeEmpty).map(parseIds);
+  console.log(labelsToGet);
+  // discogs(labelsToGet.filter(removeEmpty));
+});
