@@ -21,7 +21,7 @@ const getLabel = function (labelId) {
         const label = data;
         resolve(label);
       });
-    }, throttle * 1000);
+    }, throttle * 1200);
   });
 };
 
@@ -38,7 +38,7 @@ const getLabelRelease = function (label) {
 
         resolve(label);
       });
-    }, throttle * 1000);
+    }, throttle * 1200);
   });
 };
 
@@ -60,7 +60,7 @@ const promiseRelease = function (release) {
         // create a write stream and process text to csv
         resolve(release);
       });
-    }, throttle * 1000);
+    }, throttle * 1200);
   });
 };
 
