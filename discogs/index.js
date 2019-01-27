@@ -116,22 +116,28 @@ const pushTracklists = function (labels) {
   });
 };
 
+const writeFile = function(path, file) {
+  fs.writeFile(path, file, (err) => {
+    if (err) {
+      return console.log(err);
+    }
+    console.log('The file was saved at ' + path + '!');
+  });
+};
+
 module.exports = function (labelsToGet) {
   Promise.all(labelsToGet.map(getLabel))
     .then(labels => Promise.all(labels.map(getLabelRelease)))
     .then(labels => Promise.all(labels.map(getRelease)))
     .then((labels) => {
+      console.log('Start writing export.json file.');
+      writeFile('export.json', JSON.stringify(labels, null, 2));
       pushTracklists(labels)
         .then((tracks) => {
           console.log('Start writing export.csv file.');
           jsonexport(tracks, (err, csv) => {
             if (err) return console.log(err);
-            fs.writeFile('export.csv', csv, (err) => {
-              if (err) {
-                return console.log(err);
-              }
-              console.log('The file was saved!');
-            });
+            writeFile('export.csv', csv);
           });
         })
         .catch(err => console.log(`Push tracklist error: ${err}`));
