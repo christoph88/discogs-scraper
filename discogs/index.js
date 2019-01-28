@@ -138,6 +138,9 @@ function textToNumber(text) {
   if (text.match(/\b[MDCLXVI]+\b/)) {
     return fromRoman(text.match(/\b[MDCLXVI]+\b/)[0]);
   }
+  if (text.match(/\b\d\d\d\d\b/i)) {
+    return 1000;
+  }
   return 1;
 }
 
