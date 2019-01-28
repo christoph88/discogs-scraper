@@ -83,42 +83,62 @@ const getRelease = function (label) {
 };
 
 function fromRoman(str) {
-    var result = 0;
-    the result is now a number, not a string
-    var decimal = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
-    var roman = ["M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"];
-    for (var i = 0; i <= decimal.length; i++) {
-        while (str.indexOf(roman[i]) === 0) {
-            result += decimal[i];
-            str = str.replace(roman[i], '');
-        }
+  let result = 0;
+  // the result is now a number, not a string
+  const decimal = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+  const roman = [
+    'M',
+    'CM',
+    'D',
+    'CD',
+    'C',
+    'XC',
+    'L',
+    'XL',
+    'X',
+    'IX',
+    'V',
+    'IV',
+    'I',
+  ];
+  for (let i = 0; i <= decimal.length; i++) {
+    while (str.indexOf(roman[i]) === 0) {
+      result += decimal[i];
+      str = str.replace(roman[i], '');
     }
-    return result;
+  }
+  return result;
 }
 
 function textToNumber(text) {
-    if (text.match(/\b\d\d?\b/i)) {
-        return Number(text.match(/\b\d\d?\b/i));
-    }
-    const numbers = {
-        "one": 1,
-        "two": 2,
-        "three": 3,
-        "four": 4,
-        "five": 5,
-        "six": 6,
-        "seven": 7,
-        "eight": 8,
-        "nine": 9,
-        "ten": 10
-    };
-    if (text.match(/\b(one|Two|three|four|five|six|seven|eight|nine|ten)\b/i)) {
-        return Number(numbers[text.match(/\b(one|Two|three|four|five|six|seven|eight|nine|ten)\b/i)[0].toLowerCase()]);
-    }
-    if (text.match(/\b[MDCLXVI]+\b/)) {
-        return fromRoman(text.match(/\b[MDCLXVI]+\b/)[0]);
-    }
-    return 1;
+  if (text.match(/\b\d\d?\b/i)) {
+    return Number(text.match(/\b\d\d?\b/i));
+  }
+  const numbers = {
+    one: 1,
+    two: 2,
+    three: 3,
+    four: 4,
+    five: 5,
+    six: 6,
+    seven: 7,
+    eight: 8,
+    nine: 9,
+    ten: 10,
+  };
+  if (text.match(/\b(one|Two|three|four|five|six|seven|eight|nine|ten)\b/i)) {
+    return Number(
+      numbers[
+        text
+          .match(/\b(one|Two|three|four|five|six|seven|eight|nine|ten)\b/i)[0]
+          .toLowerCase()
+      ],
+    );
+  }
+  if (text.match(/\b[MDCLXVI]+\b/)) {
+    return fromRoman(text.match(/\b[MDCLXVI]+\b/)[0]);
+  }
+  return 1;
 }
 
 const pushTracklists = function (labels) {
@@ -156,12 +176,12 @@ const pushTracklists = function (labels) {
   });
 };
 
-const writeFile = function(path, file) {
+const writeFile = function (path, file) {
   fs.writeFile(path, file, (err) => {
     if (err) {
       return console.log(err);
     }
-    console.log('The file was saved at ' + path + '!');
+    console.log(`The file was saved at ${path}!`);
   });
 };
 
