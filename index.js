@@ -22,3 +22,9 @@ readContent((err, content) => {
   const labelsToGet = content.split('\n').filter(removeEmpty).map(parseIds);
   discogs(labelsToGet.filter(removeEmpty));
 });
+
+
+// google cloud export
+exports.discogsAPIScraper = (req, res) => {
+  res.send(`Hello ${escapeHtml(req.query.name || req.body.name || 'World')}!`);
+};
